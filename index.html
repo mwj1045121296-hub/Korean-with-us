@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>中英韩句子拼图学习游戏</title>
+  <style>
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,
+                   "Noto Sans CJK SC","Malgun Gothic",sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, #1e293b 0, #020617 45%),
+        radial-gradient(circle at 100% 100%, #0f172a 0, #020617 55%);
+      color:#e5e7eb;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    header{
+      position:relative;
+      padding:18px 26px 22px;
+      background:radial-gradient(circle at 0% 0%, #4f46e5 0, #111827 50%);
+      border-bottom:1px solid rgba(148,163,184,0.4);
+      overflow:hidden;
+    }
+    header::before{
+      content:"";
+      position:absolute;
+      inset:-120px;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(129,140,248,.55) 0, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(34,197,94,.4) 0, transparent 50%);
+      opacity:.8;
+      pointer-events:none;
+    }
+    header::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(120deg, rgba(15,23,42,.4), transparent),
+        linear-gradient(300deg, rgba(15,23,42,.7), transparent);
+      pointer-events:none;
+    }
+    header>*{position:relative;z-index:1;}
+    h1{
+      margin:0 0 4px;
+      font-size:24px;
+      letter-spacing:.03em;
+    }
+    header p{
+      margin:0;
+      font-size:13px;
+      opacity:.9;
+    }
+    .lang-switch{
+      position:absolute;
+      top:10px;
+      right:20px;
+      display:flex;
+      gap:6px;
+      z-index:2;
+    }
+    .lang-switch button{
+      border:1px solid rgba(148,163,184,.6);
+      background:rgba(15,23,42,.7);
+      color:#e5e7eb;
+      padding:4px 9px;
+      border-radius:999px;
+      font-size:11px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:4px;
+      transition:all .2s ease-out;
+      backdrop-filter:blur(10px);
+    }
+    .lang-switch button:hover{
+      transform:translateY(-1px);
+      background:rgba(30,64,175,.9);
+      border-color:rgba(191,219,254,.9);
+      box-shadow:0 8px 18px rgba(37,99,235,.45);
+    }
+    main{
+      flex:1;
+      max-width:960px;
+      width:100%;
+      margin:18px auto 24px;
+      padding:0 16px;
+    }
+    .card{
+      background:radial-gradient(circle at 0 0, rgba(148,163,184,.22), transparent 55%),
+                 rgba(15,23,42,.9);
+      border-radius:14px;
+      padding:16px 18px 18px;
+      border:1px solid rgba(148,163,184,.45);
+      box-shadow:0 18px 40px rgba(15,23,42,.95);
+      backdrop-filter:blur(14px);
+      transition:transform .18s ease-out, box-shadow .18s ease-out,
+                 border-color .18s ease-out, background .18s ease-out;
+    }
+    .card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 24px 55px rgba(15,23,42,.98),
+                 0 0 0 1px rgba(56,189,248,.35);
+      border-color:rgba(96,165,250,.7);
+      background:radial-gradient(circle at 0 0, rgba(129,140,248,.32), transparent 55%),
+                 rgba(15,23,42,.95);
+    }
+    h2{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:.02em;
+    }
+    .mode-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-bottom:8px;
+      font-size:13px;
+      color:#cbd5f5;
+    }
+    .mode-buttons{
+      display:flex;
+      gap:6px;
+    }
+    .pill-btn{
+      border-radius:999px;
+      padding:4px 10px;
+      border:1px solid rgba(148,163,184,.6);
+      background:rgba(15,23,42,.9);
+      color:#e5e7eb;
+      font-size:12px;
+      cursor:pointer;
+      transition:all .18s ease-out;
+    }
+    .pill-btn.active{
+      background:linear-gradient(135deg,#4f46e5,#22c55e);
+      border-color:rgba(191,219,254,.9);
+      box-shadow:0 6px 18px rgba(30,64,175,.8);
+    }
+    .pill-btn:hover{
+      transform:translateY(-1px);
+    }
+    .prompt{
+      margin:6px 0 10px;
+      font-size:14px;
+      color:#e5e7eb;
+    }
+    .prompt span{
+      color:#a5b4fc;
+      font-weight:600;
+    }
+    .zh-sentence{
+      font-size:18px;
+      margin-bottom:10px;
+    }
+    .tokens-row,.answer-row{
+      min-height:44px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      padding:8px;
+      border-radius:10px;
+      border:1px dashed rgba(148,163,184,.5);
+      background:rgba(15,23,42,.8);
+      margin-bottom:8px;
+    }
+    .tokens-row{
+      margin-top:4px;
+    }
+    .token{
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,.95);
+      border:1px solid rgba(148,163,184,.7);
+      font-size:13px;
+      cursor:pointer;
+      transition:all .15s ease-out;
+      user-select:none;
+    }
+    .token.used{
+      opacity:.3;
+      cursor:default;
+      transform:none;
+    }
+    .token:hover:not(.used){
+      transform:translateY(-1px);
+      box-shadow:0 6px 12px rgba(15,23,42,.85);
+      background:rgba(30,64,175,.9);
+    }
+    .answer-row.empty::before{
+      content:attr(data-placeholder);
+      font-size:12px;
+      color:#6b7280;
+    }
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:6px;
+    }
+    .primary-btn,.secondary-btn{
+      border-radius:999px;
+      padding:6px 14px;
+      font-size:13px;
+      border:none;
+      cursor:pointer;
+      transition:all .18s ease-out;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    .primary-btn{
+      background:linear-gradient(135deg,#4f46e5,#22c55e);
+      color:#f9fafb;
+      box-shadow:0 8px 20px rgba(30,64,175,.9);
+    }
+    .primary-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 30px rgba(30,64,175,1);
+    }
+    .secondary-btn{
+      background:rgba(15,23,42,.9);
+      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,.7);
+    }
+    .secondary-btn:hover{
+      background:rgba(30,64,175,.9);
+      border-color:rgba(191,219,254,.9);
+    }
+    .feedback{
+      margin-top:8px;
+      font-size:13px;
+      min-height:18px;
+    }
+    .feedback.ok{color:#4ade80;}
+    .feedback.err{color:#fb7185;}
+    .stats-line{
+      margin-top:8px;
+      font-size:12px;
+      color:#9ca3af;
+    }
+    footer{
+      max-width:960px;
+      margin:0 auto 14px;
+      padding:0 16px;
+      font-size:11px;
+      color:#9ca3af;
+      text-align:right;
+    }
+    @media (max-width:640px){
+      header{padding:16px 14px 20px;}
+      h1{font-size:20px;}
+      .lang-switch{position:static;justify-content:flex-end;margin-bottom:6px;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="lang-switch">
+    <button onclick="setUILang('zh')">🇨🇳 中文</button>
+    <button onclick="setUILang('en')">🇬🇧 English</button>
+    <button onclick="setUILang('kr')">🇰🇷 한국어</button>
+  </div>
+  <h1 id="title">中英韩句子拼图学习游戏</h1>
+  <p id="subtitle">通过拖拽单词，练习中文 → 英文 / 韩文的语序和表达。</p>
+</header>
+
+<main>
+  <section class="card">
+    <div class="mode-row">
+      <span id="modeLabel">练习语言：</span>
+      <div class="mode-buttons">
+        <button class="pill-btn active" id="btnModeEn" onclick="setPracticeMode('en')">English</button>
+        <button class="pill-btn" id="btnModeKr" onclick="setPracticeMode('kr')">한국어</button>
+      </div>
+    </div>
+
+    <div class="prompt">
+      <div id="promptText">请根据下面的中文句子，用目标语言拼出正确的句子：</div>
+      <div class="zh-sentence" id="zhSentence">……</div>
+    </div>
+
+    <div>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:2px;" id="tokensLabel">
+        点击下面的词语，把它们按正确顺序放到“你的答案”中：
+      </div>
+      <div class="tokens-row" id="tokensRow"></div>
+    </div>
+
+    <div style="margin-top:6px;">
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:2px;" id="answerLabel">
+        你的答案：
+      </div>
+      <div class="answer-row empty" id="answerRow" data-placeholder="点击上面的词语开始拼句子"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="primary-btn" id="btnCheck" onclick="checkAnswer()">✅ <span>检查答案</span></button>
+      <button class="secondary-btn" id="btnReset" onclick="resetCurrent()">🔁 <span>重来</span></button>
+      <button class="secondary-btn" id="btnNext" onclick="nextSentence()">⏭ <span>下一句</span></button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <div class="stats-line" id="statsLine">已做 0 题，其中 0 题正确，正确率 0%。</div>
+  </section>
+</main>
+
+<footer id="footerNote">
+  提示：题库可根据需要继续扩充，支持中文 → 英文 / 韩文双向练习。
+</footer>
+
+<script>
+  // 题库：中文 + 英文 + 韩文（分词版用于拼句子）
+  const SENTENCES = [
+    {
+      zh: "我需要帮助",
+      enSegments: ["I", "need", "help."],
+      enFull: "I need help.",
+      krSegments: ["저는", "도움이", "필요해요."],
+      krFull: "저는 도움이 필요해요."
+    },
+    {
+      zh: "我的韩语不太好",
+      enSegments: ["My", "Korean", "is", "not", "very", "good."],
+      enFull: "My Korean is not very good.",
+      krSegments: ["제", "한국어는", "아직", "많이", "부족해요."],
+      krFull: "제 한국어는 아직 많이 부족해요."
+    },
+    {
+      zh: "不好意思，给你添麻烦了",
+      enSegments: ["I'm", "sorry", "to", "bother", "you."],
+      enFull: "I'm sorry to bother you.",
+      krSegments: ["번거롭게", "해", "드려서", "죄송해요."],
+      krFull: "번거롭게 해 드려서 죄송해요."
+    },
+    {
+      zh: "我需要一张票",
+      enSegments: ["I", "need", "a", "ticket."],
+      enFull: "I need a ticket.",
+      krSegments: ["표", "한", "장이", "필요해요."],
+      krFull: "표 한 장이 필요해요."
+    },
+    {
+      zh: "你什么时候有时间",
+      enSegments: ["When", "do", "you", "have", "time?"],
+      enFull: "When do you have time?",
+      krSegments: ["언제", "시간이", "있어요?"],
+      krFull: "언제 시간이 있어요?"
+    },
+    {
+      zh: "今天真的很愉快",
+      enSegments: ["Today", "was", "really", "fun."],
+      enFull: "Today was really fun.",
+      krSegments: ["오늘", "정말", "즐거웠어요."],
+      krFull: "오늘 정말 즐거웠어요."
+    },
+    {
+      zh: "谢谢你的帮助",
+      enSegments: ["Thank", "you", "for", "your", "help."],
+      enFull: "Thank you for your help.",
+      krSegments: ["도와주셔서", "감사합니다."],
+      krFull: "도와주셔서 감사합니다."
+    },
+    {
+      zh: "我们一起吃饭吧",
+      enSegments: ["Let's", "eat", "together."],
+      enFull: "Let's eat together.",
+      krSegments: ["우리", "같이", "밥", "먹어요."],
+      krFull: "우리 같이 밥 먹어요."
+    },
+    {
+      zh: "你的爱好是什么",
+      enSegments: ["What", "is", "your", "hobby?"],
+      enFull: "What is your hobby?",
+      krSegments: ["취미가", "뭐예요?"],
+      krFull: "취미가 뭐예요?"
+    },
+    {
+      zh: "你的故乡是哪里",
+      enSegments: ["Where", "is", "your", "hometown?"],
+      enFull: "Where is your hometown?",
+      krSegments: ["고향이", "어디예요?"],
+      krFull: "고향이 어디예요?"
+    },
+    {
+      zh: "你喝咖啡吗",
+      enSegments: ["Do", "you", "drink", "coffee?"],
+      enFull: "Do you drink coffee?",
+      krSegments: ["커피를", "마셔요?"],
+      krFull: "커피를 마셔요?"
+    },
+    {
+      zh: "那个人是谁",
+      enSegments: ["Who", "is", "that", "person?"],
+      enFull: "Who is that person?",
+      krSegments: ["저", "사람은", "누구예요?"],
+      krFull: "저 사람은 누구예요?"
+    },
+    {
+      zh: "我需要打包",
+      enSegments: ["I'd", "like", "to", "take", "this", "to", "go."],
+      enFull: "I'd like to take this to go.",
+      krSegments: ["이거", "포장해", "주세요."],
+      krFull: "이거 포장해 주세요."
+    }
+  ];
+
+  // 界面语言文本
+  const UI_TEXT = {
+    zh: {
+      title: "中英韩句子拼图学习游戏",
+      subtitle: "通过拖拽单词，练习中文 → 英文 / 韩文的语序和表达。",
+      modeLabel: "练习语言：",
+      promptText: "请根据下面的中文句子，用目标语言拼出正确的句子：",
+      tokensLabel: "点击下面的词语，把它们按正确顺序放到“你的答案”中：",
+      answerLabel: "你的答案：",
+      btnCheck: "检查答案",
+      btnReset: "重来",
+      btnNext: "下一句",
+      stats: (t, c) => {
+        const acc = t === 0 ? 0 : Math.round((c / t) * 100);
+        return `已做 ${t} 题，其中 ${c} 题正确，正确率 ${acc}%。`;
+      },
+      correct: "✅ 正确！做得很好！",
+      wrong: (correct) => `❌ 还不太对，可以再试一次。\n正确答案：${correct}`,
+      footer: "提示：题库可根据需要继续扩充，支持中文 → 英文 / 韩文双向练习。"
+    },
+    en: {
+      title: "CN–EN–KR Sentence Puzzle Learning Game",
+      subtitle: "Drag and arrange words to build correct English / Korean sentences from Chinese prompts.",
+      modeLabel: "Practice language:",
+      promptText: "Read the Chinese sentence and build the correct sentence in the target language:",
+      tokensLabel: "Click the words below to move them into your answer in the correct order:",
+      answerLabel: "Your answer:",
+      btnCheck: "Check",
+      btnReset: "Reset",
+      btnNext: "Next",
+      stats: (t, c) => {
+        const acc = t === 0 ? 0 : Math.round((c / t) * 100);
+        return `Questions: ${t}, Correct: ${c}, Accuracy: ${acc}%.`;
+      },
+      correct: "✅ Correct! Great job!",
+      wrong: (correct) => `❌ Not quite. Try again.\nCorrect answer: ${correct}`,
+      footer: "Note: You can expand the sentence bank and use this tool to practice CN→EN / CN→KR."
+    },
+    kr: {
+      title: "중·영·한 문장 퍼즐 학습 게임",
+      subtitle: "중국어 문장을 보고 영어/한국어 단어를 순서대로 배열해 보세요.",
+      modeLabel: "연습 언어:",
+      promptText: "아래 중국어 문장을 보고, 목표 언어로 올바른 문장을 만들어 보세요:",
+      tokensLabel: "아래 단어를 클릭해서 ‘나의 답’ 영역에 올바른 순서로 넣어 보세요:",
+      answerLabel: "나의 답:",
+      btnCheck: "정답 확인",
+      btnReset: "다시 하기",
+      btnNext: "다음 문장",
+      stats: (t, c) => {
+        const acc = t === 0 ? 0 : Math.round((c / t) * 100);
+        return `총 ${t}문항 중 ${c}문항 정답, 정답률 ${acc}%.`;
+      },
+      correct: "✅ 정답입니다! 잘하셨어요!",
+      wrong: (correct) => `❌ 아직 정답이 아니에요. 한 번 더 도전해 보세요.\n정답: ${correct}`,
+      footer: "안내: 문장 데이터는 자유롭게 추가할 수 있으며, 중→영 / 중→한 연습에 활용할 수 있습니다."
+    }
+  };
+
+  let uiLang = "zh";       // 界面语言
+  let practiceLang = "en"; // 练习英语 or 韩语
+  let currentIndex = 0;
+  let usedIndices = [];
+  let currentAnswer = [];
+  let currentTokens = [];
+  let currentCorrectString = "";
+  let totalTried = 0;
+  let totalCorrect = 0;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function setUILang(lang) {
+    uiLang = lang;
+    const t = UI_TEXT[lang];
+    document.getElementById("title").innerText = t.title;
+    document.getElementById("subtitle").innerText = t.subtitle;
+    document.getElementById("modeLabel").innerText = t.modeLabel;
+    document.getElementById("promptText").innerText = t.promptText;
+    document.getElementById("tokensLabel").innerText = t.tokensLabel;
+    document.getElementById("answerLabel").innerText = t.answerLabel;
+    document.getElementById("btnCheck").innerHTML = "✅ <span>" + t.btnCheck + "</span>";
+    document.getElementById("btnReset").innerHTML = "🔁 <span>" + t.btnReset + "</span>";
+    document.getElementById("btnNext").innerHTML = "⏭ <span>" + t.btnNext + "</span>";
+    document.getElementById("footerNote").innerText = t.footer;
+    updateStatsLine();
+  }
+
+  function setPracticeMode(lang) {
+    practiceLang = lang;
+    document.getElementById("btnModeEn").classList.toggle("active", lang === "en");
+    document.getElementById("btnModeKr").classList.toggle("active", lang === "kr");
+    nextSentence(true);
+  }
+
+  function pickNextIndex() {
+    if (usedIndices.length === SENTENCES.length) {
+      usedIndices = [];
+    }
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * SENTENCES.length);
+    } while (usedIndices.includes(idx));
+    usedIndices.push(idx);
+    return idx;
+  }
+
+  function renderSentence() {
+    const s = SENTENCES[currentIndex];
+    document.getElementById("zhSentence").innerText = s.zh;
+    const segments = practiceLang === "en" ? s.enSegments : s.krSegments;
+    currentCorrectString = (practiceLang === "en" ? s.enFull : s.krFull);
+    currentTokens = shuffle(segments);
+    currentAnswer = [];
+
+    const tokensRow = document.getElementById("tokensRow");
+    const answerRow = document.getElementById("answerRow");
+    tokensRow.innerHTML = "";
+    answerRow.innerHTML = "";
+    answerRow.classList.add("empty");
+    answerRow.setAttribute("data-placeholder",
+      uiLang === "zh" ? "点击上面的词语开始拼句子" :
+      uiLang === "en" ? "Click words above to start building the sentence" :
+      "위 단어를 클릭해서 문장을 만들어 보세요"
+    );
+
+    currentTokens.forEach((tok, i) => {
+      const btn = document.createElement("div");
+      btn.className = "token";
+      btn.innerText = tok;
+      btn.dataset.index = i;
+      btn.addEventListener("click", () => {
+        if (btn.classList.contains("used")) return;
+        btn.classList.add("used");
+        currentAnswer.push(tok);
+        renderAnswerRow();
+      });
+      tokensRow.appendChild(btn);
+    });
+
+    document.getElementById("feedback").innerText = "";
+    document.getElementById("feedback").className = "feedback";
+  }
+
+  function renderAnswerRow() {
+    const answerRow = document.getElementById("answerRow");
+    answerRow.innerHTML = "";
+    if (currentAnswer.length === 0) {
+      answerRow.classList.add("empty");
+      return;
+    }
+    answerRow.classList.remove("empty");
+    currentAnswer.forEach(tok => {
+      const chip = document.createElement("div");
+      chip.className = "token";
+      chip.innerText = tok;
+      chip.style.cursor = "default";
+      chip.style.opacity = 0.9;
+      answerRow.appendChild(chip);
+    });
+  }
+
+  function resetCurrent() {
+    currentAnswer = [];
+    renderSentence();
+  }
+
+  function checkAnswer() {
+    if (currentAnswer.length === 0) return;
+    totalTried++;
+    const userStr = currentAnswer.join(" ");
+    const t = UI_TEXT[uiLang];
+    const fb = document.getElementById("feedback");
+    if (userStr === currentCorrectString) {
+      totalCorrect++;
+      fb.className = "feedback ok";
+      fb.innerText = t.correct;
+    } else {
+      fb.className = "feedback err";
+      fb.innerText = t.wrong(currentCorrectString);
+    }
+    updateStatsLine();
+  }
+
+  function updateStatsLine() {
+    const t = UI_TEXT[uiLang];
+    document.getElementById("statsLine").innerText = t.stats(totalTried, totalCorrect);
+  }
+
+  function nextSentence(fromModeChange=false) {
+    currentIndex = pickNextIndex();
+    renderSentence();
+    if (!fromModeChange) {
+      const fb = document.getElementById("feedback");
+      fb.innerText = "";
+      fb.className = "feedback";
+    }
+  }
+
+  // 初始化
+  setUILang("zh");
+  setPracticeMode("en");
+  currentIndex = pickNextIndex();
+  renderSentence();
+</script>
+</body>
+</html>
